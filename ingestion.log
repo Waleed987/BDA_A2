@@ -1,0 +1,12 @@
+2026-04-18 20:50:40,400 - INFO - === HDFS Ingestion Pipeline Started ===
+2026-04-18 20:50:40,401 - INFO - Validating /mnt/c/Users/pc/Desktop/BDA_A2/yellow_tripdata_2015-01.csv
+2026-04-18 20:50:40,405 - INFO - File extension validated: .csv
+2026-04-18 20:50:40,408 - INFO - File size: 1893.96 MB
+2026-04-18 20:50:40,447 - INFO - Detected encoding: ascii (confidence: 100%)
+2026-04-18 20:51:51,101 - INFO - Row count: 12748987
+2026-04-18 20:51:51,102 - INFO - Validation passed
+2026-04-18 20:51:51,102 - INFO - Creating HDFS directory: /warehouse/raw/nyc_taxi/year=2026/month=04
+2026-04-18 20:51:54,362 - INFO - HDFS directory ready: /warehouse/raw/nyc_taxi/year=2026/month=04
+2026-04-18 20:51:54,362 - INFO - Uploading file: hdfs dfs -put -f /mnt/c/Users/pc/Desktop/BDA_A2/yellow_tripdata_2015-01.csv /warehouse/raw/nyc_taxi/year=2026/month=04/
+2026-04-18 20:56:01,452 - INFO - Upload successful to /warehouse/raw/nyc_taxi/year=2026/month=04
+2026-04-18 20:56:01,453 - INFO - === Pipeline completed successfully ===
