@@ -1,0 +1,7 @@
+2026-04-15 19:54:26,162 - INFO - Starting validation for /mnt/c/Users/pc/Desktop/BDA_A2/yellow_tripdata_2015-01.csv
+2026-04-15 19:54:26,169 - INFO - File size verified: 1893.96 MB
+2026-04-15 19:54:26,256 - INFO - Detected encoding: ascii
+2026-04-15 19:55:49,864 - INFO - Row count verified: 12748987 rows.
+2026-04-15 19:55:49,866 - INFO - Preparing to upload to: /warehouse/raw/nyc_taxi/year=2026/month=04
+2026-04-15 19:55:52,714 - INFO - Executing: hdfs dfs -put -f /mnt/c/Users/pc/Desktop/BDA_A2/yellow_tripdata_2015-01.csv /warehouse/raw/nyc_taxi/year=2026/month=04/
+2026-04-15 20:00:55,209 - INFO - Upload to HDFS completed successfully.
