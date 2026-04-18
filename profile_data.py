@@ -15,10 +15,7 @@ print("\n--- SCHEMA DESCRIPTION ---")
 print(df.info())
 
 print("\n--- MISSING VALUE ANALYSIS ---")
-missing_counts = df.isnull().sum()
-missing_pct = (df.isnull().sum() / len(df)) * 100
-missing_df = pd.DataFrame({'Missing Count': missing_counts, 'Missing %': missing_pct.round(4)})
-print(missing_df.to_string())
+print(df.isnull().sum())
 
 # Generate and save Missing Values Heatmap
 plt.figure(figsize=(10,6))
@@ -60,72 +57,6 @@ print(f"3. Type Inconsistencies: 'tpep_pickup_datetime' and 'tpep_dropoff_dateti
 invalid_flag = df[~df['store_and_fwd_flag'].isin(['Y', 'N'])].shape[0]
 flag_pct = (invalid_flag / total_rows) * 100
 print(f"4. Formatting Errors (Invalid store_and_fwd_flag): {invalid_flag} rows ({flag_pct:.4f}%)")
-
-neg_tip = df[df['tip_amount'] < 0].shape[0]
-neg_tip_pct = (neg_tip / total_rows) * 100
-print(f"   Outliers (Tip Amount < 0): {neg_tip} rows ({neg_tip_pct:.4f}%)")
-
-neg_total = df[df['total_amount'] <= 0].shape[0]
-neg_total_pct = (neg_total / total_rows) * 100
-print(f"   Outliers (Total Amount <= 0): {neg_total} rows ({neg_total_pct:.4f}%)")
-
-print("\n--- PROPOSED CLEANING STRATEGY ---")
-print("""
-1. NEGATIVE / ZERO FARE AMOUNTS
-   Issue  : Column 'fare_amount' has """ + str(invalid_fares) + f""" rows with values <= 0 ({fare_pct:.4f}% of records).
-   Cause  : Data entry errors or system glitches during payment processing.
-   Action : Replace negative/zero fare values with the median fare amount for the same
-            RateCodeID and comparable trip_distance bucket (rounded to nearest mile),
-            as the median is robust against outliers in this right-skewed distribution.
-
-2. ZERO PASSENGER COUNT
-   Issue  : Column 'passenger_count' has """ + str(zero_passengers) + f""" rows with value == 0 ({pass_pct:.4f}% of records).
-   Cause  : Driver failed to enter passenger count or meter default was not updated.
-   Action : Replace 0 values with the mode (most frequent value = 1) for the same VendorID,
-            since solo rides dominate the dataset and mode preserves the true distribution.
-
-3. EXTREME TRIP DISTANCES
-   Issue  : Column 'trip_distance' has """ + str(extreme_dist) + f""" rows with values > 100 miles ({dist_pct:.4f}% of records).
-   Cause  : GPS errors or metering malfunctions producing unrealistically long distances.
-   Action : Cap trip_distance at the 99.9th percentile value. Rows exceeding this threshold
-            will have trip_distance replaced with the 99.9th percentile value, preserving the
-            record while removing the distortion from downstream aggregations.
-
-4. DATETIME TYPE INCONSISTENCY
-   Issue  : Columns 'tpep_pickup_datetime' and 'tpep_dropoff_datetime' are loaded as 'object'
-            (string) instead of 'datetime64'. Affects {total_rows} rows (100.00%).
-   Cause  : pandas read_csv does not auto-parse datetime columns without explicit instruction.
-   Action : Convert both columns using pd.to_datetime() with format='%Y-%m-%d %H:%M:%S'.
-            Rows that fail parsing (invalid dates) will be coerced to NaT and subsequently
-            dropped, as pickup/dropoff time is essential for any time-based analysis.
-
-5. DUPLICATE ROWS
-   Issue  : """ + str(duplicates) + f""" fully duplicate rows detected ({dup_pct:.4f}% of records).
-   Cause  : Possible re-transmission of trip records from vendor systems.
-   Action : Drop exact duplicate rows using df.drop_duplicates(), keeping the first occurrence.
-            Since these are full-row duplicates, no information is lost.
-
-6. INVALID store_and_fwd_flag VALUES
-   Issue  : Column 'store_and_fwd_flag' has """ + str(invalid_flag) + f""" rows with values
-            outside the expected domain {{Y, N}} ({flag_pct:.4f}% of records).
-   Cause  : Encoding inconsistencies or corrupted records.
-   Action : Map any non-standard values to 'N' (the dominant category), as the flag
-            indicates whether the trip was stored locally before forwarding — defaulting
-            to 'N' (not stored) is the conservative and safe assumption.
-
-7. NEGATIVE TIP AMOUNTS
-   Issue  : Column 'tip_amount' has """ + str(neg_tip) + f""" rows with values < 0 ({neg_tip_pct:.4f}% of records).
-   Cause  : Reversed transactions or data entry errors.
-   Action : Replace negative tip values with 0.00, as tips cannot logically be negative.
-            Setting to zero rather than median avoids artificially inflating tip averages.
-
-8. NEGATIVE / ZERO TOTAL AMOUNTS
-   Issue  : Column 'total_amount' has """ + str(neg_total) + f""" rows with values <= 0 ({neg_total_pct:.4f}% of records).
-   Cause  : Voided trips, refunds, or system errors.
-   Action : Recalculate total_amount as the sum of fare_amount + extra + mta_tax + tip_amount
-            + tolls_amount + improvement_surcharge (after the above cleaning steps). If the
-            recalculated total is still <= 0, drop the row as it represents an invalid trip.
-""")
 
 print("\n--- DISTRIBUTION ANALYSIS (GENERATING 5 PLOTS) ---")
 
