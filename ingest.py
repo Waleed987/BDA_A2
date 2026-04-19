@@ -1,6 +1,5 @@
 import os, subprocess, logging, chardet
 
-# Base directory = wherever this script lives
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 logging.basicConfig(
@@ -21,14 +20,12 @@ def validate_file(filepath):
         logging.error(f"File not found: {filepath}")
         return False
 
-    # Extension check
     _, ext = os.path.splitext(filepath)
     if ext.lower() != '.csv':
         logging.error(f"Invalid file extension: {ext}. Expected .csv")
         return False
     logging.info(f"File extension validated: {ext}")
 
-    # File size check
     file_size_mb = os.path.getsize(filepath) / (1024 * 1024)
     if file_size_mb == 0:
         logging.error("File is empty (0 bytes)")
@@ -37,7 +34,6 @@ def validate_file(filepath):
         logging.warning(f"File is very small: {file_size_mb:.2f} MB")
     logging.info(f"File size: {file_size_mb:.2f} MB")
 
-    # Encoding detection
     with open(filepath, 'rb') as f:
         raw = f.read(100000)
     detected = chardet.detect(raw)
@@ -47,7 +43,6 @@ def validate_file(filepath):
         logging.warning(f"Low encoding confidence: {encoding} ({confidence:.0%})")
     logging.info(f"Detected encoding: {encoding} (confidence: {confidence:.0%})")
 
-    # Row count
     result = subprocess.run(['wc', '-l', filepath], capture_output=True, text=True)
     if result.returncode != 0:
         logging.error(f"Row count failed: {result.stderr.strip()}")
