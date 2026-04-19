@@ -1,13 +1,17 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+# Base directory = wherever this script lives
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Force Pandas to show all columns and widen the display for the terminal
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 1000)
 
 # Load the dataset (First 2 million rows to easily exceed the 500k requirement)
-file_path = "/mnt/c/Users/pc/Desktop/BDA_A2/yellow_tripdata_2015-01.csv"
+file_path = os.path.join(BASE_DIR, "yellow_tripdata_2015-01.csv")
 print("Loading dataset... (This might take a few seconds)")
 df = pd.read_csv(file_path, nrows=2000000)
 
@@ -22,7 +26,7 @@ plt.figure(figsize=(10,6))
 sns.heatmap(df.isnull(), cbar=False, cmap='viridis')
 plt.title('Missing Values Heatmap')
 plt.tight_layout()
-plt.savefig('/mnt/c/Users/pc/Desktop/BDA_A2/missing_heatmap.png')
+plt.savefig(os.path.join(BASE_DIR, 'missing_heatmap.png'))
 print("-> missing_heatmap.png saved.")
 
 print("\n--- STATISTICAL SUMMARY ---")
@@ -65,34 +69,34 @@ plt.figure(figsize=(8,5))
 sns.histplot(df[(df['fare_amount'] > 0) & (df['fare_amount'] < 100)]['fare_amount'], bins=50, kde=True)
 plt.title('Distribution of Fare Amounts (Filtered 0-100)')
 plt.tight_layout()
-plt.savefig('/mnt/c/Users/pc/Desktop/BDA_A2/dist_1_fare.png')
+plt.savefig(os.path.join(BASE_DIR, 'dist_1_fare.png'))
 
 # 2. Trip Distance
 plt.figure(figsize=(8,5))
 sns.histplot(df[(df['trip_distance'] > 0) & (df['trip_distance'] < 20)]['trip_distance'], bins=50, kde=True)
 plt.title('Distribution of Trip Distance (Filtered 0-20 miles)')
 plt.tight_layout()
-plt.savefig('/mnt/c/Users/pc/Desktop/BDA_A2/dist_2_distance.png')
+plt.savefig(os.path.join(BASE_DIR, 'dist_2_distance.png'))
 
 # 3. Tip Amount
 plt.figure(figsize=(8,5))
 sns.histplot(df[(df['tip_amount'] >= 0) & (df['tip_amount'] < 20)]['tip_amount'], bins=50, kde=True)
 plt.title('Distribution of Tip Amounts (Filtered 0-20)')
 plt.tight_layout()
-plt.savefig('/mnt/c/Users/pc/Desktop/BDA_A2/dist_3_tip.png')
+plt.savefig(os.path.join(BASE_DIR, 'dist_3_tip.png'))
 
 # 4. Total Amount
 plt.figure(figsize=(8,5))
 sns.histplot(df[(df['total_amount'] > 0) & (df['total_amount'] < 100)]['total_amount'], bins=50, kde=True)
 plt.title('Distribution of Total Amounts (Filtered 0-100)')
 plt.tight_layout()
-plt.savefig('/mnt/c/Users/pc/Desktop/BDA_A2/dist_4_total.png')
+plt.savefig(os.path.join(BASE_DIR, 'dist_4_total.png'))
 
 # 5. Passenger Count
 plt.figure(figsize=(8,5))
 sns.histplot(df[(df['passenger_count'] >= 0) & (df['passenger_count'] <= 6)]['passenger_count'], discrete=True)
 plt.title('Distribution of Passenger Count')
 plt.tight_layout()
-plt.savefig('/mnt/c/Users/pc/Desktop/BDA_A2/dist_5_passengers.png')
+plt.savefig(os.path.join(BASE_DIR, 'dist_5_passengers.png'))
 
 print("All tasks completed! Check your BDA_A2 folder for the 6 PNG files and copy the terminal output to your report.")

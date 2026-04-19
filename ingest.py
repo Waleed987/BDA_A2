@@ -1,15 +1,18 @@
 import os, subprocess, logging, chardet
 
+# Base directory = wherever this script lives
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.expanduser('~/ingestion.log')),
+        logging.FileHandler(os.path.join(BASE_DIR, 'ingestion.log')),
         logging.StreamHandler()
     ]
 )
 
-LOCAL_FILE_PATH = "/mnt/c/Users/pc/Desktop/BDA_A2/yellow_tripdata_2015-01.csv"
+LOCAL_FILE_PATH = os.path.join(BASE_DIR, "yellow_tripdata_2015-01.csv")
 HDFS_TARGET_DIR = "/warehouse/raw/nyc_taxi/year=2026/month=04"
 
 def validate_file(filepath):
