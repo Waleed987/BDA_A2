@@ -1,15 +1,15 @@
-# BDA Assignment 02 — HDFS Data Ingestion & Profiling
+# BDA Assignment 03 — ETL Pipeline & Analytics
 
 ## Project Overview
 
-This project implements a **fully automated data ingestion pipeline** for the NYC Yellow Taxi Trip dataset (January 2015) into the Hadoop Distributed File System (HDFS). The pipeline includes file validation, encoding detection, row count verification, and structured HDFS upload with partitioned directory organization. A comprehensive data profiling report is also generated to analyze schema, missing values, statistical summaries, and distributions.
+This project extends Assignment 02 (HDFS Data Ingestion & Profiling) into a complete data warehousing lifecycle. It implements a PySpark ETL pipeline that transforms the cleaned NYC Yellow Taxi dataset into a star-schema warehouse stored as Parquet on HDFS, runs Spark SQL analytical queries to answer business questions, and generates data visualizations.
 
 ### Dataset
 
 - **Source:** [NYC Yellow Taxi Trip Data — Kaggle](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data)
 - **File:** `yellow_tripdata_2015-01.csv`
 - **Size:** ~1.9 GB
-- **Records:** 2,000,000 rows × 19 columns
+- **Records:** ~12.7 million rows × 19 columns
 
 ---
 
@@ -17,15 +17,20 @@ This project implements a **fully automated data ingestion pipeline** for the NY
 
 ```
 BDA_A2/
-├── ingest.py                  # Fully automated HDFS ingestion script
-├── profile_data.py            # Data profiling script (schema, stats, visualizations)
-├── cleaning_strategy.md       # Proposed cleaning strategy for Assignment 3
-├── requirements.txt           # Python dependencies
-├── hdfs_screenshot.png        # Screenshot of HDFS directory structure
-├── profiling_report.pdf       # Data profiling report
-├── ingestion.log              # Auto-generated log from ingest.py
-├── missing_heatmap.png        # Missing values heatmap
-├── dist_*.png                 # Distribution plots for numeric columns
+├── ingest.py                  # (A2) Fully automated HDFS ingestion script
+├── profile_data.py            # (A2) Data profiling script
+├── cleaning_strategy.md       # (A2) Proposed cleaning strategy
+├── etl.py                     # (A3) PySpark ETL — transform, model, load, validate
+├── analytics.py               # (A3) Spark SQL queries & visualization script
+├── commands.md                # (A3) Step-by-step commands to run everything
+├── requirements.txt           # All Python dependencies (A2 + A3)
+├── visualizations/            # Output folder for all charts
+│   ├── chart1_daily_revenue_trend.png
+│   ├── chart2_revenue_by_payment.png
+│   ├── chart3_fare_heatmap.png
+│   └── chart4_summary_dashboard.png
+├── final_report.pdf           # Complete report covering all 3 tasks
+├── hdfs_screenshot.png        # HDFS /warehouse/processed/ directory screenshot
 └── README.md                  # This file
 ```
 
@@ -37,8 +42,9 @@ BDA_A2/
 
 - **OS:** Ubuntu (WSL2 on Windows or native Linux)
 - **Python:** 3.8+
-- **Hadoop:** 3.x (HDFS configured and running)
 - **Java:** JDK 8 or 11
+- **Hadoop:** 3.x (HDFS configured and running)
+- **Apache Spark:** 3.x (with PySpark)
 
 ### 1. Clone the Repository
 
@@ -53,15 +59,15 @@ cd BDA_A2
 pip install -r requirements.txt
 ```
 
-This installs:
-| Package | Version | Purpose |
-|---------|---------|---------|
-| pandas | 2.2.0 | Data loading and profiling |
-| matplotlib | 3.8.2 | Distribution visualizations |
-| seaborn | 0.13.2 | Heatmap and statistical plots |
-| chardet | 5.2.0 | File encoding detection |
+| Package    | Version | Purpose                          |
+|------------|---------|----------------------------------|
+| pandas     | 2.2.0   | Data loading and profiling       |
+| matplotlib | 3.8.2   | Distribution visualizations      |
+| seaborn    | 0.13.2  | Heatmap and statistical plots    |
+| chardet    | 5.2.0   | File encoding detection          |
+| pyspark    | 3.5.1   | ETL pipeline and Spark SQL       |
 
-### 3. Start Hadoop Services
+### 3. Start Hadoop & Spark Services
 
 ```bash
 start-dfs.sh
@@ -77,65 +83,84 @@ Expected output should include: `NameNode`, `DataNode`, `ResourceManager`, `Node
 
 ### 4. Place the Dataset
 
-Download the dataset from [Kaggle](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data) and place the CSV file in the **same directory** as the scripts:
-
-```
-BDA_A2/
-├── ingest.py
-├── profile_data.py
-└── yellow_tripdata_2015-01.csv   ← place here
-```
-
-> **Note:** Both scripts automatically detect their own directory — no hardcoded paths to edit.
+Download the dataset from [Kaggle](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data) and place the CSV file in the same directory as the scripts.
 
 ---
 
-## How to Run `ingest.py`
+## How to Run
 
-The ingestion script is **fully automated** — no user input is required.
+### Step 1: Data Ingestion (from A2)
 
 ```bash
 python3 ingest.py
 ```
 
-### What It Does (Step-by-Step)
+This validates and uploads the raw CSV to HDFS at `/warehouse/raw/nyc_taxi/year=2026/month=04/`.
 
-1. **File Validation**
-   - Checks file existence and `.csv` extension
-   - Validates file size (warns if < 1 MB)
-   - Detects file encoding using `chardet`
-   - Counts total rows using `wc -l`
-
-2. **HDFS Upload**
-   - Creates the target HDFS directory: `/warehouse/raw/nyc_taxi/year=2026/month=04`
-   - Uploads the CSV file using `hdfs dfs -put -f`
-
-3. **Logging**
-   - All steps are logged to both the console and `~/ingestion.log`
-   - Errors and warnings are captured with timestamps
-
-### Verify Upload
-
-After running the script, verify the file is on HDFS:
+### Step 2: ETL Pipeline (A3 Task 1)
 
 ```bash
-hdfs dfs -ls -R /warehouse/raw/nyc_taxi/
+spark-submit --master local[*] --driver-memory 8g etl.py
 ```
+
+This script:
+1. **Reads** raw CSV from HDFS
+2. **Cleans** data (removes duplicates, fixes fares, passengers, distances, datetimes, etc.)
+3. **Transforms** — derives new columns (trip_duration, revenue_per_mile, time_of_day, etc.)
+4. **Models** data into a star schema (fact_trips + 5 dimension tables)
+5. **Loads** all tables as Parquet to `/warehouse/processed/`
+6. **Validates** row counts and null checks for every table
+
+### Step 3: Analytics & Visualizations (A3 Task 2)
+
+```bash
+spark-submit --master local[*] --driver-memory 8g analytics.py
+```
+
+This script:
+1. Loads the Parquet warehouse from HDFS
+2. Runs 5 Spark SQL queries answering business questions
+3. Generates 4 charts saved to `visualizations/` folder
+
+### Step 4: HDFS Screenshot
+
+```bash
+hdfs dfs -ls -R /warehouse/processed/
+```
+
+Take a screenshot of the output for the report.
 
 ---
 
-## Data Profiling
+## Business Questions Answered
 
-Run the profiling script to generate schema info, missing value analysis, statistical summaries, and distribution plots:
+| # | Question | Query Features |
+|---|----------|----------------|
+| 1 | Peak revenue hours & rush-hour vs off-peak fares | Time-based grouping |
+| 2 | Top revenue days with ranking | RANK() window function |
+| 3 | Payment type split & tip comparison | ROW_NUMBER() window function |
+| 4 | Rate code analysis & per-trip revenue | Broadcast join with dimension |
+| 5 | Daily revenue trend & day-over-day change | LAG() window function |
 
-```bash
-python3 profile_data.py
-```
+## Optimizations Applied
 
-This generates:
-- Console output with schema, missing values, and descriptive statistics
-- `missing_heatmap.png` — heatmap of null values across all columns
-- `dist_*.png` — distribution histograms for key numeric columns
+| Technique | Where | Impact |
+|-----------|-------|--------|
+| **Partitioning** | fact_trips partitioned by `pickup_date` | Enables partition pruning on date-range queries |
+| **Caching** | Cleaned DataFrame & fact table cached | Avoids recomputation across multiple queries |
+| **Broadcast Join** | dim_ratecode joined with broadcast() | Avoids shuffle for small dimension tables |
+| **Query Plan Analysis** | `.explain(True)` on complex aggregation | Demonstrates predicate pushdown & partition pruning |
+
+---
+
+## Visualizations
+
+| Chart | Type | File |
+|-------|------|------|
+| Daily Revenue Trend | Line/Area chart | `chart1_daily_revenue_trend.png` |
+| Revenue by Payment Type | Bar chart | `chart2_revenue_by_payment.png` |
+| Avg Fare Heatmap (Hour × Day) | Heatmap | `chart3_fare_heatmap.png` |
+| Summary Dashboard | 4 subplots | `chart4_summary_dashboard.png` |
 
 ---
 
@@ -143,25 +168,23 @@ This generates:
 
 | Name | Contribution |
 |------|--------------|
-| Muhammad Waleed Younas | Ingestion pipeline, HDFS setup, data profiling |
-| Syed Danish Abbas | Data profiling, cleaning strategy |
+| Muhammad Waleed Younas | ETL pipeline, Spark SQL queries, visualizations |
+| Syed Danish Abbas | Data profiling, cleaning strategy, report |
 | Daniyal | Data profiling, documentation |
 
 ---
 
 ## Submission Details
 
-- **Course:** Big Data Analytics
-- **Assignment:** 02 — Data Ingestion & Profiling
-- **Submission Date:** April 2026
-- **Submitted Files:**
+- **Course:** CS-404 Big Data Analytics
+- **Assignment:** 03 — ETL Pipeline & Analytics
+- **Submission Date:** May 2026
 
 | File | Description |
 |------|-------------|
-| `ingest.py` | Fully automated Python ingestion script |
-| `hdfs_screenshot.png` | Screenshot of HDFS showing uploaded files and directory structure |
-| `profiling_report.pdf` | Data profiling report with schema, stats, and visualizations |
-| `requirements.txt` | All Python dependencies listed |
-| `README.md` | Project documentation (this file) |
-
----
+| `etl.py` | PySpark transformation, modelling, loading, and validation script |
+| `analytics.py` | Spark SQL queries and visualization script |
+| `final_report.pdf` | Complete report covering all 3 tasks |
+| `hdfs_screenshot.png` | /warehouse/processed/ directory screenshot |
+| `requirements.txt` | All Python dependencies |
+| `README.md` | This file |
