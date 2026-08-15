@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project extends Assignment 02 (HDFS Data Ingestion & Profiling) into a complete data warehousing lifecycle. It implements a PySpark ETL pipeline that transforms the cleaned NYC Yellow Taxi dataset into a star-schema warehouse stored as Parquet on HDFS, runs Spark SQL analytical queries to answer business questions, and generates data visualizations.
+This project extends Assignment 02 (HDFS Data Ingestion & Profiling) into a complete data warehousing lifecycle. It implements a PySpark ETL pipeline that transforms the cleaned NYC Yellow Taxi dataset into a star-schema warehouse stored as Parquet on HDFS,runs Spark SQL analytical queries to answer business questions, and generates data visualizations.
 
 ### Dataset
 
