@@ -162,17 +162,7 @@ Take a screenshot of the output for the report.
 | Avg Fare Heatmap (Hour × Day) | Heatmap | `chart3_fare_heatmap.png` |
 | Summary Dashboard | 4 subplots | `chart4_summary_dashboard.png` |
 
----
 
-## Group Members
-
-| Name | Contribution |
-|------|--------------|
-| Muhammad Waleed Younas | ETL pipeline, Spark SQL queries, visualizations |
-| Syed Danish Abbas | Data profiling, cleaning strategy, report |
-| Daniyal | Data profiling, documentation |
-
----
 
 ## Submission Details
 
